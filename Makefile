@@ -1,5 +1,5 @@
-appname = example
-package = example
+appname = wizardindustry
+package = wizardindustry
 
 # Default goal
 .DEFAULT_GOAL := help

@@ -3,10 +3,10 @@
 # Django
 from django.urls import path
 
-# AA Example App
-from example import views
+# AA wizardindustry App
+from wizardindustry import views
 
-app_name: str = "example"
+app_name: str = "wizardindustry"
 
 urlpatterns = [
     path("", views.index, name="index"),

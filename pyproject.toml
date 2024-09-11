@@ -5,16 +5,16 @@ requires = [
 ]
 
 [project]
-name = "aa-example-plugin"
-description = "Example Plugin for Alliance Auth (GitHub Version)"
+name = "aa-wizardindustry-plugin"
+description = "Wizard Industry"
 readme = "README.md"
 keywords = [
     "allianceauth",
-    "example",
+    "wizard",
 ]
 license = { file = "LICENSE" }
 authors = [
-    { name = "Peter Pfeufer", email = "develop@ppfeufer.de" },
+    { name = "Dusty Meg", email = "aa_plugins@mmoore.uk" },
 ]
 requires-python = ">=3.10"
 classifiers = [
@@ -37,15 +37,17 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "allianceauth>=4.3.1,<5",
+    "allianceauth<5,>=4",
+    "django-eveuniverse>=1.5.4",
+    "aa-blueprints>=1.7.0",
 ]
-urls.Changelog = "https://github.com/ppfeufer/aa-example-plugin/blob/master/CHANGELOG.md"
-urls."Issue / Bug Reports" = "https://github.com/ppfeufer/aa-example-plugin/issues"
+urls.Changelog = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/blob/master/CHANGELOG.md"
+urls."Issue / Bug Reports" = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/issues"
 
 [tool.hatch.version]
-path = "example/__init__.py"
+path = "wizardindustry/__init__.py"
 
 [tool.hatch.build]
 include = [
-    "/example",
+    "/wizardindustry",
 ]
