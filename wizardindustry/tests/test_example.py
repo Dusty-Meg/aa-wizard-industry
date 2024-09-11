@@ -1,14 +1,14 @@
 """
-Example Test
+wizardindustry Test
 """
 
 # Django
 from django.test import TestCase
 
 
-class TestExample(TestCase):
+class Testwizardindustry(TestCase):
     """
-    TestExample
+    Testwizardindustry
     """
 
     @classmethod
@@ -21,7 +21,7 @@ class TestExample(TestCase):
 
         super().setUpClass()
 
-    def test_example(self):
+    def test_wizardindustry(self):
         """
         Dummy test function
         :return:

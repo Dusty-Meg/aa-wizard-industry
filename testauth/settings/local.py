@@ -10,7 +10,7 @@ Test settings
 
 from .base import *
 
-PACKAGE = "example"
+PACKAGE = "wizardindustry"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
@@ -19,7 +19,7 @@ STATICFILES_DIRS = [
     f"{PACKAGE}/static",
 ]
 
-SITE_URL = "https://example.com"
+SITE_URL = "https://wizardindustry.com"
 CSRF_TRUSTED_ORIGINS = [SITE_URL]
 
 DISCORD_BOT_TOKEN = "My_Dummy_Token"
@@ -83,8 +83,8 @@ APPS_WITH_PUBLIC_VIEWS = []
 # https://developers.eveonline.com for Authentication
 # & API Access and fill out these settings.
 # Be sure to set the callback URL
-# to https://example.com/sso/callback
-# substituting your domain for example.com
+# to https://wizardindustry.com/sso/callback
+# substituting your domain for wizardindustry.com
 # Logging in to auth requires the publicData
 # scope (can be overridden through the
 # LOGIN_TOKEN_SCOPES setting).
@@ -104,7 +104,7 @@ ESI_SSO_CALLBACK_URL = "http://localhost:8000"
 # or Elastic Email to send email.
 # Https://www.sparkpost.com/docs/integrations/django/
 # https://elasticemail.com/resources/settings/smtp-api/
-# Set the default from email to something like 'noreply@example.com'
+# Set the default from email to something like 'noreply@wizardindustry.com'
 # Email validation can be turned off by uncommenting the line below.
 # This can break some services.
 REGISTRATION_VERIFY_EMAIL = False

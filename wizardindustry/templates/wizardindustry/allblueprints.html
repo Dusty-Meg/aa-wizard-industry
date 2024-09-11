@@ -1,0 +1,123 @@
+{% extends 'wizardindustry/base.html' %}
+
+{% load i18n %}
+{% load humanize %}
+
+{% block details %}
+    <div class="card card-primary">
+        <div class="card-header">
+            <div class="card-title">
+                <pr>Missing Blueprint Library</p>
+                <p>{% translate "Total" %} ({{ model.all_owned }}/{{ model.all_total }})</p></div>
+        </div>
+
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Owned / Total</th>
+                        <th>Remaining Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in model.market_groups %}
+                        {% if group.calculated_blueprint_count != 0 %}
+
+                        <tr style="line-height: 10px">
+                            <td><h2>{{ group.market_group_name }}</h2></td>
+                            <td>{{ group.calculated_owned_count }} / {{ group.calculated_blueprint_count }}</td>
+                            <td>{{ group.calculated_base_cost|intcomma }} ISK</td>
+                        </tr>
+
+                        {% if group.calculated_blueprint_count != group.calculated_owned_count %}
+                        {% for h3 in group.sub_groups %}
+                            {% if h3.calculated_blueprint_count != 0 %}
+                            <tr style="line-height: 10px">
+                                <td><h3>{{ h3.market_group_name }}</h3></td>
+                                <td>{{ h3.calculated_owned_count }} / {{ h3.calculated_blueprint_count }}</td>
+                                <td>{{ h3.calculated_base_cost|intcomma }} ISK</td>
+                            </tr>
+                            {% if h3.calculated_owned_count != h3.calculated_blueprint_count%}
+                            {% for blueprint in h3.blueprints %}
+                            <tr class="{{blueprint.class_string}}" style="line-height: 10px">
+                                <td>{{ blueprint.blueprint_name }}  ({{ blueprint.base_cost|intcomma }} ISK)</td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                            {% endif %}
+
+                            {% if h3.calculated_blueprint_count != h3.calculated_owned_count %}
+                            {% for h4 in h3.sub_groups %}
+                                {% if h4.calculated_blueprint_count != 0 %}
+                                <tr style="line-height: 10px">
+                                    <td><h4>{{ h4.market_group_name }}</h4></td>
+                                    <td>{{ h4.calculated_owned_count }} / {{ h4.calculated_blueprint_count }}</td>
+                                    <td>{{ h4.calculated_base_cost|intcomma }} ISK</td>
+                                </tr>
+                                {% if h4.calculated_owned_count != h4.calculated_blueprint_count%}
+                                {% for blueprint in h4.blueprints %}
+                                <tr class="{{blueprint.class_string}}" style="line-height: 10px">
+                                    <td>{{ blueprint.blueprint_name }}  ({{ blueprint.base_cost|intcomma }} ISK)</td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                                {% endif %}
+
+                                {% if h4.calculated_blueprint_count != h4.calculated_owned_count %}
+                                {% for h5 in h4.sub_groups %}
+                                    {% if h5.calculated_blueprint_count != 0 %}
+                                    <tr style="line-height: 10px">
+                                        <td><h5>{{ h5.market_group_name }}</h5></td>
+                                        <td>{{ h5.calculated_owned_count }} / {{ h5.calculated_blueprint_count }}</td>
+                                        <td>{{ h5.calculated_base_cost|intcomma }} ISK</td>
+                                    </tr>
+                                    {% if h5.calculated_owned_count != h5.calculated_blueprint_count%}
+                                    {% for blueprint in h5.blueprints %}
+                                    <tr class="{{blueprint.class_string}}" style="line-height: 10px">
+                                        <td>{{ blueprint.blueprint_name }}  ({{ blueprint.base_cost|intcomma }} ISK)</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endif %}
+                                    {% endif %}
+
+                                    {% if h5.calculated_blueprint_count != h5.calculated_owned_count %}
+                                    {% for h6 in h5.sub_groups %}
+                                        {% if h6.calculated_blueprint_count != 0 %}
+                                        <tr style="line-height: 10px">
+                                            <td><h6>{{ h6.market_group_name }}</h6></td>
+                                            <td>{{ h6.calculated_owned_count }} / {{ h6.calculated_blueprint_count }}</td>
+                                            <td>{{ h6.calculated_base_cost|intcomma }} ISK</td>
+                                        </tr>
+                                        {% if h6.calculated_owned_count != h6.calculated_blueprint_count%}
+                                        {% for blueprint in h6.blueprints %}
+                                        <tr class="{{blueprint.class_string}}" style="line-height: 10px">
+                                            <td>{{ blueprint.blueprint_name }}  ({{ blueprint.base_cost|intcomma }} ISK)</td>
+                                        </tr>
+                                        {% endfor %}
+                                        {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_javascript %}
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_script %}
+{% endblock %}
