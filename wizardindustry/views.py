@@ -57,7 +57,7 @@ def _market_cycler(blueprint_marketgroups, owned_blueprints):
                     continue
                 activity_product_product = activity_product_product.product_eve_type
 
-                if hasattr(activity_product_product, 'inv_meta_types') and activity_product_product.inv_meta_types != None and activity_product_product.inv_meta_types.meta_group_id != 1:
+                if hasattr(activity_product_product, 'inv_meta_types') and activity_product_product.inv_meta_types != None and activity_product_product.inv_meta_types.meta_group_id != 1 and activity_product_product.inv_meta_types.meta_group_id != 54:
                     continue
 
             blueprint_view_model = owned_blueprints_blueprints()
