@@ -40,6 +40,23 @@ def index(request: WSGIRequest) -> HttpResponse:
 def _market_cycler(blueprint_marketgroups, owned_blueprints):
     models = []
 
+    bad_bpos = [
+        47969,
+        48469,
+        48470,
+        47971,
+        48471,
+        48472,
+        47973,
+        48473,
+        48474,
+        48095,
+        58973,
+        58974,
+        49973,
+        60514
+    ]
+
     for market_group in blueprint_marketgroups:
         market_group_view_model = owned_blueprints_market_groups()
         market_group_view_model.market_group_id = market_group.id
@@ -49,6 +66,9 @@ def _market_cycler(blueprint_marketgroups, owned_blueprints):
 
         for eve_type in market_group.eve_types.filter(published=True).all():
             if eve_type.name.startswith('Civilian'):
+                continue
+            
+            if eve_type.id in bad_bpos:
                 continue
 
             if eve_type is not None:
