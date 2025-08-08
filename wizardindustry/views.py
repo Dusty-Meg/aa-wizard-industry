@@ -17,8 +17,8 @@ from eveuniverse.models import EveMarketGroup, EveType, EveIndustryActivityProdu
 
 
 @login_required
-@permission_required("wizardindustry.basic_access")
-def index(request: WSGIRequest) -> HttpResponse:
+@permission_required("wizardindustry.blueprint_pokemon")
+def blueprint_pokemon(request: WSGIRequest) -> HttpResponse:
     """
     Index view
     :param request:
