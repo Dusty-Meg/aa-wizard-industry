@@ -2,20 +2,19 @@
 
 ______________________________________________________________________
 
-<!-- mdformat-toc start --slug=github --maxlevel=6 --minlevel=1 -->
+<!-- mdformat-toc start --slug=github --maxlevel=6 --minlevel=2 -->
 
-- [Contributor Covenant Code of Conduct](#contributor-covenant-code-of-conduct)
-  - [Our Pledge](#our-pledge)
-  - [Our Standards](#our-standards)
-  - [Enforcement Responsibilities](#enforcement-responsibilities)
-  - [Scope](#scope)
-  - [Enforcement](#enforcement)
-  - [Enforcement Guidelines](#enforcement-guidelines)
-    - [1. Correction](#1-correction)
-    - [2. Warning](#2-warning)
-    - [3. Temporary Ban](#3-temporary-ban)
-    - [4. Permanent Ban](#4-permanent-ban)
-  - [Attribution](#attribution)
+- [Our Pledge](#our-pledge)
+- [Our Standards](#our-standards)
+- [Enforcement Responsibilities](#enforcement-responsibilities)
+- [Scope](#scope)
+- [Enforcement](#enforcement)
+- [Enforcement Guidelines](#enforcement-guidelines)
+  - [1. Correction](#1-correction)
+  - [2. Warning](#2-warning)
+  - [3. Temporary Ban](#3-temporary-ban)
+  - [4. Permanent Ban](#4-permanent-ban)
+- [Attribution](#attribution)
 
 <!-- mdformat-toc end -->
 
@@ -39,7 +38,7 @@ wizardindustrys of behavior that contributes to a positive environment for our
 community include:
 
 - Demonstrating empathy and kindness toward other people
-- Being respectful of differing opinions, viewpoints, and experiences
+- Being respectful of differing opinions, viewpoints and experiences
 - Giving and gracefully accepting constructive feedback
 - Accepting responsibility and apologizing to those affected by our mistakes,
   and learning from the experience
@@ -54,7 +53,7 @@ wizardindustrys of unacceptable behavior include:
 - Public or private harassment
 - Publishing others' private information, such as a physical or email
   address, without their explicit permission
-- Other conducts which could reasonably be considered inappropriate in a
+- Other conducts, which could reasonably be considered inappropriate in a
   professional setting
 
 ## Enforcement Responsibilities<a name="enforcement-responsibilities"></a>
@@ -127,7 +126,7 @@ Violating these terms may lead to a permanent ban.
 ### 4. Permanent Ban<a name="4-permanent-ban"></a>
 
 **Community Impact**: Demonstrating a pattern of violation of community
-standards, including sustained inappropriate behavior,  harassment of an
+standards, including sustained inappropriate behavior, harassment of an
 individual, or aggression toward or disparagement of classes of individuals.
 
 **Consequence**: A permanent ban from any sort of public interaction within
