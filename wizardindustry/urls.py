@@ -9,5 +9,5 @@ from wizardindustry import views
 app_name: str = "wizardindustry"
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    path("/blueprint_pokemon", views.blueprint_pokemon, name="Blueprint Pokemon"),
 ]
