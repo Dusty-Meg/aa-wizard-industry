@@ -5,6 +5,9 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy
+
 
 from .view_models import (
     owned_blueprints,
@@ -12,8 +15,150 @@ from .view_models import (
     owned_blueprints_blueprints
 )
 
+from buybackprogram.utils import messages_plus
+
+
+from allianceauth.authentication.models import CharacterOwnership
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from blueprints.models import Owner, Blueprint
 from eveuniverse.models import EveMarketGroup, EveType, EveIndustryActivityProduct
+
+@login_required
+@permission_required("wizardindustry.add_corporation")
+@token_required(
+    scopes=[
+        "esi-industry.read_corporation_blueprints.v1",
+        "esi-assets.read_corporation_assets.v1",
+        "esi-contracts.read_corporation_contracts.v1",
+        "esi-industry.read_corporation_jobs.v1",
+        "esi-markets.read_corporation_orders.v1",
+    ]
+)
+def setup_corporation(request, token):
+    success = True
+    token_char = EveCharacter.objects.get(character_id=token.character_id)
+
+    try:
+        owned_char = CharacterOwnership.objects.get(
+            user=request.user, character=token_char
+        )
+    except CharacterOwnership.DoesNotExist:
+        messages_plus.error(
+            request,
+            format_html(
+                gettext_lazy(
+                    "You can only use your main or alt characters "
+                    "to add corporations. "
+                    "However, character %s is neither. "
+                )
+                % format_html("<strong>{}</strong>", token_char.character_name)
+            ),
+        )
+        success = False
+
+    if success:
+        try:
+            corporation = EveCorporationInfo.objects.get(
+                corporation_id=token_char.corporation_id
+            )
+        except EveCorporationInfo.DoesNotExist:
+            corporation = EveCorporationInfo.objects.create_corporation(
+                token_char.corporation_id,
+            )
+
+        with transaction.atomic():
+            owner, _ = Owner.objects.update_or_create(
+                corporation=corporation, character=owned_char, user=request.user
+            )
+
+            owner.save()
+
+        messages_plus.info(
+            request,
+            format_html(
+                gettest_lazy(
+                    "%(corporation)s has been added with %(character)s."
+                )
+                % {
+                    "corporation": format_html(
+                        "<strong>{}</strong>", corporation.corporation
+                    ),
+                    "character": format_html(
+                        "<strong>{}</strong>", owned_char.character.character_name
+                    ),
+                }
+            ),
+        )
+    return redirect("wizardindustry:index")
+
+
+@login_required
+@permission_required("wizardindustry.add_character")
+@token_required(
+    scopes=[
+        "esi-industry.read_blueprints.v1",
+        "esi-assets.read_assets.v1",
+        "esi-contracts.read_character_contracts.v1",
+        "esi-industry.read_character_jobs.v1",
+        "esi-markets.read_character_orders.v1",
+    ]
+)
+def setup_character(request, token):
+    success = True
+    token_char = EveCharacter.objects.get(character_id=token.character_id)
+
+    try:
+        owned_char = CharacterOwnership.objects.get(
+            user=request.user, character=token_char
+        )
+    except CharacterOwnership.DoesNotExist:
+        messages_plus.error(
+            request,
+            format_html(
+                gettext_lazy(
+                    "You can only use your main or alt characters "
+                    "to add corporations. "
+                    "However, character %s is neither. "
+                )
+                % format_html("<strong>{}</strong>", token_char.character_name)
+            ),
+        )
+        success = False
+
+    if success:
+        try:
+            corporation = EveCorporationInfo.objects.get(
+                corporation_id=token_char.corporation_id
+            )
+        except EveCorporationInfo.DoesNotExist:
+            corporation = EveCorporationInfo.objects.create_corporation(
+                token_char.corporation_id,
+            )
+
+        with transaction.atomic():
+            owner, _ = Owner.objects.update_or_create(
+                corporation=corporation, character=owned_char, user=request.user
+            )
+
+            owner.save()
+
+        messages_plus.info(
+            request,
+            format_html(
+                gettest_lazy(
+                    "%(corporation)s has been added with %(character)s."
+                )
+                % {
+                    "corporation": format_html(
+                        "<strong>{}</strong>", corporation.corporation
+                    ),
+                    "character": format_html(
+                        "<strong>{}</strong>", owned_char.character.character_name
+                    ),
+                }
+            ),
+        )
+    return redirect("wizardindustry:index")
 
 
 @login_required
