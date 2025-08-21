@@ -1,5 +1,5 @@
+# Standard Library
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -23,7 +23,7 @@ class owned_blueprints_market_groups:
     description: str
     blueprint_count: int
     owned_count: int
-    sub_groups: list['owned_blueprints_market_groups']
+    sub_groups: list["owned_blueprints_market_groups"]
     blueprints: list[owned_blueprints_blueprints]
 
     _calculated_blueprint_count: int = None
@@ -42,9 +42,10 @@ class owned_blueprints_market_groups:
         if self._calculated_blueprint_count is None:
             self._calculated_blueprint_count = self.blueprint_count
             for sub_group in self.sub_groups:
-                self._calculated_blueprint_count += sub_group.calculated_blueprint_count()
+                self._calculated_blueprint_count += (
+                    sub_group.calculated_blueprint_count()
+                )
         return self._calculated_blueprint_count
-    
 
     def calculated_owned_count(self):
         if self._calculated_owned_count is None:
@@ -55,7 +56,6 @@ class owned_blueprints_market_groups:
             for sub_group in self.sub_groups:
                 self._calculated_owned_count += sub_group.calculated_owned_count()
         return self._calculated_owned_count
-    
 
     def calculated_base_cost(self):
         if self._calculated_base_cost is None:
@@ -66,7 +66,7 @@ class owned_blueprints_market_groups:
             for sub_group in self.sub_groups:
                 self._calculated_base_cost += sub_group.calculated_base_cost()
         return self._calculated_base_cost
-        
+
 
 @dataclass
 class owned_blueprints:
@@ -80,18 +80,15 @@ class owned_blueprints:
         for market_group in self.market_groups:
             cost += market_group.calculated_base_cost()
         return cost
-    
 
     def all_owned(self):
         owned = 0
         for market_group in self.market_groups:
             owned += market_group.calculated_owned_count()
         return owned
-    
 
     def all_total(self):
         total = 0
         for market_group in self.market_groups:
             total += market_group.calculated_blueprint_count()
         return total
-    

@@ -1,6 +1,15 @@
+# Standard Library
 
+# Django
+from django.contrib import messages
+from django.contrib.messages.constants import DEBUG, ERROR, INFO, SUCCESS, WARNING
+from django.utils.html import format_html
 
-import re from typing import Any from django.conf import settings from django.contrib import messages from django.contrib.messages.constants import DEBUG, ERROR, INFO, SUCCESS, WARNING from django.utils.html import format_html from allianceauth.services.hooks import get_extension_logger logger = get_extension_logger(__name__)
+# Alliance Auth
+from allianceauth.services.hooks import get_extension_logger
+
+logger = get_extension_logger(__name__)
+
 
 class messages_plus:
     """Pendant to Django messages adding level icons and HTML support

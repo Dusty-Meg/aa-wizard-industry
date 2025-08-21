@@ -1,31 +1,33 @@
 """App Views"""
 
+# Third Party
+from blueprints.models import Blueprint
+from buybackprogram.utils import messages_plus
+
 # Django
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpResponse
 from django.db import transaction
-from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
-from esi.decorators import token_required
 
-
-from .view_models import (
-    owned_blueprints,
-    owned_blueprints_market_groups,
-    owned_blueprints_blueprints
-)
-
-from .models import Owner
-
-from buybackprogram.utils import messages_plus
-
-
+# Alliance Auth
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from blueprints.models import Blueprint
-from eveuniverse.models import EveMarketGroup, EveType, EveIndustryActivityProduct
+from esi.decorators import token_required
+
+# Alliance Auth (External Libs)
+from eveuniverse.models import EveMarketGroup
+
+from .models import Owner
+from .view_models import (
+    owned_blueprints,
+    owned_blueprints_blueprints,
+    owned_blueprints_market_groups,
+)
+
 
 @login_required
 @permission_required("wizardindustry.add_corporation")
@@ -132,6 +134,7 @@ def setup_character(request, token):
 
     return redirect("wizardindustry:index")
 
+
 @login_required
 @permission_required("wizardindustry.basic_access")
 def index(request: WSGIRequest) -> HttpResponse:
@@ -148,13 +151,17 @@ def blueprint_pokemon(request: WSGIRequest) -> HttpResponse:
     :return:
     """
 
-    owned_blueprint_list = Blueprint.objects.user_has_access(request.user).filter(runs=None).all()
+    owned_blueprint_list = (
+        Blueprint.objects.user_has_access(request.user).filter(runs=None).all()
+    )
     blueprint_marketgroups = EveMarketGroup.objects.filter(parent_market_group__id=2)
 
     view_model = owned_blueprints()
 
-    view_model.market_groups = _market_cycler(blueprint_marketgroups, owned_blueprint_list)
-        
+    view_model.market_groups = _market_cycler(
+        blueprint_marketgroups, owned_blueprint_list
+    )
+
     context = {"model": view_model}
 
     return render(request, "wizardindustry/allblueprints.html", context)
@@ -177,7 +184,7 @@ def _market_cycler(blueprint_marketgroups, owned_blueprints):
         58973,
         58974,
         49973,
-        60514
+        60514,
     ]
 
     for market_group in blueprint_marketgroups:
@@ -188,25 +195,36 @@ def _market_cycler(blueprint_marketgroups, owned_blueprints):
         market_group_view_model.blueprints = []
 
         for eve_type in market_group.eve_types.filter(published=True).all():
-            if eve_type.name.startswith('Civilian'):
+            if eve_type.name.startswith("Civilian"):
                 continue
-            
+
             if eve_type.id in bad_bpos:
                 continue
 
             if eve_type is not None:
-                activity_product_product = eve_type.industry_products.filter(activity_id=1).first()
-                if not hasattr(activity_product_product, 'product_eve_type'):
+                activity_product_product = eve_type.industry_products.filter(
+                    activity_id=1
+                ).first()
+                if not hasattr(activity_product_product, "product_eve_type"):
                     continue
                 activity_product_product = activity_product_product.product_eve_type
 
-                if hasattr(activity_product_product, 'inv_meta_types') and activity_product_product.inv_meta_types != None and activity_product_product.inv_meta_types.meta_group_id != 1 and activity_product_product.inv_meta_types.meta_group_id != 54:
+                if (
+                    hasattr(activity_product_product, "inv_meta_types")
+                    and activity_product_product.inv_meta_types is not None
+                    and activity_product_product.inv_meta_types.meta_group_id != 1
+                    and activity_product_product.inv_meta_types.meta_group_id != 54
+                ):
                     continue
 
             blueprint_view_model = owned_blueprints_blueprints()
             blueprint_view_model.blueprint_id = eve_type.id
             blueprint_view_model.blueprint_name = eve_type.name
-            blueprint_view_model.base_cost = eve_type.base_price.base_price if hasattr(eve_type, 'base_price') and eve_type.base_price is not None else 0
+            blueprint_view_model.base_cost = (
+                eve_type.base_price.base_price
+                if hasattr(eve_type, "base_price") and eve_type.base_price is not None
+                else 0
+            )
 
             blueprint = owned_blueprints.filter(eve_type=eve_type).first()
             if blueprint:
@@ -215,11 +233,15 @@ def _market_cycler(blueprint_marketgroups, owned_blueprints):
                 blueprint_view_model.owned_count = 0
 
             market_group_view_model.blueprints.append(blueprint_view_model)
-        
-        market_group_view_model.blueprint_count = len(market_group_view_model.blueprints)
+
+        market_group_view_model.blueprint_count = len(
+            market_group_view_model.blueprints
+        )
 
         if len(market_group.market_group_children.all()) > 0:
-            market_group_view_model.sub_groups = _market_cycler(market_group.market_group_children.all(), owned_blueprints)
+            market_group_view_model.sub_groups = _market_cycler(
+                market_group.market_group_children.all(), owned_blueprints
+            )
 
         models.append(market_group_view_model)
 
