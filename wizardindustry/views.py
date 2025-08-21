@@ -4,9 +4,11 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.db import transaction
+from django.shortcuts import render, redirect
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
+from esi.decorators import token_required
 
 
 from .view_models import (
@@ -15,19 +17,21 @@ from .view_models import (
     owned_blueprints_blueprints
 )
 
+from .models import Owner
+
 from buybackprogram.utils import messages_plus
 
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from blueprints.models import Owner, Blueprint
+from blueprints.models import Blueprint
 from eveuniverse.models import EveMarketGroup, EveType, EveIndustryActivityProduct
 
 @login_required
 @permission_required("wizardindustry.add_corporation")
 @token_required(
     scopes=[
-        "esi-industry.read_corporation_blueprints.v1",
+        "esi-corporations.read_blueprints.v1",
         "esi-assets.read_corporation_assets.v1",
         "esi-contracts.read_corporation_contracts.v1",
         "esi-industry.read_corporation_jobs.v1",
@@ -73,22 +77,6 @@ def setup_corporation(request, token):
 
             owner.save()
 
-        messages_plus.info(
-            request,
-            format_html(
-                gettest_lazy(
-                    "%(corporation)s has been added with %(character)s."
-                )
-                % {
-                    "corporation": format_html(
-                        "<strong>{}</strong>", corporation.corporation
-                    ),
-                    "character": format_html(
-                        "<strong>{}</strong>", owned_char.character.character_name
-                    ),
-                }
-            ),
-        )
     return redirect("wizardindustry:index")
 
 
@@ -96,7 +84,7 @@ def setup_corporation(request, token):
 @permission_required("wizardindustry.add_character")
 @token_required(
     scopes=[
-        "esi-industry.read_blueprints.v1",
+        "esi-characters.read_blueprints.v1",
         "esi-assets.read_assets.v1",
         "esi-contracts.read_character_contracts.v1",
         "esi-industry.read_character_jobs.v1",
@@ -142,23 +130,13 @@ def setup_character(request, token):
 
             owner.save()
 
-        messages_plus.info(
-            request,
-            format_html(
-                gettest_lazy(
-                    "%(corporation)s has been added with %(character)s."
-                )
-                % {
-                    "corporation": format_html(
-                        "<strong>{}</strong>", corporation.corporation
-                    ),
-                    "character": format_html(
-                        "<strong>{}</strong>", owned_char.character.character_name
-                    ),
-                }
-            ),
-        )
     return redirect("wizardindustry:index")
+
+@login_required
+@permission_required("wizardindustry.basic_access")
+def index(request: WSGIRequest) -> HttpResponse:
+    models = {}
+    return render(request, "wizardindustry/index.html", models)
 
 
 @login_required
