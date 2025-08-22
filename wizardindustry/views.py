@@ -2,7 +2,6 @@
 
 # Third Party
 from blueprints.models import Blueprint
-from .utils import messages_plus
 
 # Django
 from django.contrib.auth.decorators import login_required, permission_required
@@ -22,6 +21,7 @@ from esi.decorators import token_required
 from eveuniverse.models import EveMarketGroup
 
 from .models import Owner
+from .utils import messages_plus
 from .view_models import (
     owned_blueprints,
     owned_blueprints_blueprints,
