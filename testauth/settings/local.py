@@ -64,6 +64,7 @@ NOTIFICATIONS_MAX_PER_USER = 50
 INSTALLED_APPS += [
     PACKAGE,
     "eveuniverse",
+    "blueprints",
 ]
 
 # By default, apps are prevented from having public views for security reasons.
