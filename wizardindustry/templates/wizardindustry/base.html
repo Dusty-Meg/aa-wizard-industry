@@ -6,9 +6,14 @@
     {% translate "Wizard Industry" %}
 {% endblock %}
 
+{% block header_nav_collapse_left %}
+    {% include "wizardindustry/partials/base/menu.html" %}
+{% endblock %}
+
 {% block header_nav_brand %}
     {% translate "Wizard Industry" %}
 {% endblock header_nav_brand %}
+
 
 {% block content %}
     <div class="allianceauth-wizardindustry-plugin">
