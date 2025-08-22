@@ -2,7 +2,7 @@
 
 # Third Party
 from blueprints.models import Blueprint
-from buybackprogram.utils import messages_plus
+from .utils import messages_plus
 
 # Django
 from django.contrib.auth.decorators import login_required, permission_required
