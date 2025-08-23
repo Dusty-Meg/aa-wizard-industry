@@ -38,6 +38,8 @@ from .view_models import (
         "esi-contracts.read_corporation_contracts.v1",
         "esi-industry.read_corporation_jobs.v1",
         "esi-markets.read_corporation_orders.v1",
+        "esi-characters.read_corporation_roles.v1",
+        "esi-universe.read_structures.v1",
     ]
 )
 def setup_corporation(request, token):
@@ -74,7 +76,10 @@ def setup_corporation(request, token):
 
         with transaction.atomic():
             owner, _ = Owner.objects.update_or_create(
-                corporation=corporation, character=owned_char, user=request.user
+                corporation=corporation,
+                character=owned_char,
+                user=request.user,
+                corporation_owner=True,
             )
 
             owner.save()
@@ -139,6 +144,12 @@ def setup_character(request, token):
 @permission_required("wizardindustry.basic_access")
 def index(request: WSGIRequest) -> HttpResponse:
     models = {}
+
+    owners = Owner.objects.all()
+
+    for owner in owners:
+        owner._get_assets()
+
     return render(request, "wizardindustry/index.html", models)
 
 
