@@ -132,7 +132,10 @@ def setup_character(request, token):
 
         with transaction.atomic():
             owner, _ = Owner.objects.update_or_create(
-                corporation=corporation, character=owned_char, user=request.user
+                corporation=corporation,
+                character=owned_char,
+                user=request.user,
+                corporation_owner=False,
             )
 
             owner.save()
