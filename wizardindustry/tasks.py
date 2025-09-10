@@ -129,20 +129,17 @@ def _create_can_locations():
 
 @shared_task
 def _update_can_locations():
-    location_names = EveLocation.objects.filter(location_name__startswith="Can:").all()
+    locations = EveLocation.objects.filter(location_name__startswith="Can:").all()
+    location_ids = list(EveLocation.objects.all().values_list("location_id", flat=True))
 
-    location_names = list(
-        EveLocation.objects.all().values_list("location_id", flat=True)
-    )
-
-    for location in location_names:
+    for location in locations:
         asset = CorporationAsset.objects.filter(item_id=location.location_id).first()
         if not asset:
             asset = CharacterAsset.objects.filter(item_id=location.location_id).first()
             if not asset:
                 continue
 
-        if asset.location_id in location_names:
+        if asset.location_id in location_ids:
             location.location_name_id = asset.location_id
             location.location_name = f"Can: {asset.name}"
             location.save()
