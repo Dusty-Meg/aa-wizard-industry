@@ -11,7 +11,13 @@ from celery import shared_task
 # Alliance Auth (External Libs)
 from eveuniverse.models import EveType
 
-from .models import BasePrice, invMetaTypes
+from .models import (
+    BasePrice,
+    CharacterAsset,
+    CorporationAsset,
+    EveLocation,
+    invMetaTypes,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,3 +55,92 @@ def get_inv_meta_types():
                 inv_meta_types.save()
             except Exception:
                 continue
+
+
+@shared_task
+def _create_office_locations():
+    corp_offices = CorporationAsset.objects.filter(location_flag="OfficeFolder").all()
+
+    location_names = list(
+        EveLocation.objects.all().values_list("location_id", flat=True)
+    )
+
+    for office in corp_offices:
+        if office.item_id not in location_names:
+            structure = EveLocation.objects.filter(
+                location_id=office.location_id
+            ).first()
+            new_location = EveLocation(
+                location_id=office.item_id,
+                location_name=f"Office: #{office.item_id}",
+                system_id=structure.system_id if structure else None,
+            )
+            new_location.save()
+
+
+@shared_task
+def _update_office_locations():
+    office_locations = EveLocation.objects.filter(
+        location_name__startswith="Office", system_id__isnull=True
+    ).all()
+
+    location_ids = list(EveLocation.objects.all().values_list("location_id", flat=True))
+
+    for location in office_locations:
+        asset = CorporationAsset.objects.filter(item_id=location.location_id).first()
+        if not asset:
+            location.location_name_id = None
+            continue
+
+        if asset.location_id in location_ids:
+            location.location_name_id = asset.location_id
+            location.save()
+
+
+@shared_task
+def _create_can_locations():
+    expandable_categories = [2]
+    not_groups = [14]
+
+    corp_cans = (
+        CorporationAsset.objects.filter(
+            type_name__eve_group__eve_category_id__in=expandable_categories,
+            singleton=True,
+        )
+        .exclude(type_name__eve_group__id__in=not_groups)
+        .order_by("pk")
+    )
+
+    location_names = list(
+        EveLocation.objects.all().values_list("location_id", flat=True)
+    )
+
+    for can in corp_cans:
+        if can.item_id not in location_names:
+            structure = EveLocation.objects.filter(location_id=can.location_id).first()
+            system_id = structure.system_id if structure else None
+            new_location = EveLocation(
+                location_id=can.item_id,
+                location_name=f"Can: {can.name}",
+                system_id=system_id,
+            )
+            new_location.save()
+
+
+@shared_task
+def _update_can_locations():
+    can_locations = EveLocation.objects.filter(location_name__startswith="Can:").all()
+    location_ids = list(EveLocation.objects.all().values_list("location_id", flat=True))
+
+    for location in can_locations:
+        asset = CorporationAsset.objects.filter(item_id=location.location_id).first()
+        if not asset:
+            asset = CharacterAsset.objects.filter(item_id=location.location_id).first()
+            if not asset:
+                location.location_name_id = None
+                continue
+
+        if asset.location_id in location_ids:
+            location.location_name_id = asset.location_id
+            location.location_name = f"Can: {asset.name}"
+            location.save()
