@@ -80,20 +80,19 @@ def _create_office_locations():
 
 @shared_task
 def _update_office_locations():
-    location_names = EveLocation.objects.filter(
+    office_locations = EveLocation.objects.filter(
         location_name__startswith="Office", system_id__isnull=True
     ).all()
 
-    location_names = list(
-        EveLocation.objects.all().values_list("location_id", flat=True)
-    )
+    location_ids = list(EveLocation.objects.all().values_list("location_id", flat=True))
 
-    for location in location_names:
+    for location in office_locations:
         asset = CorporationAsset.objects.filter(item_id=location.location_id).first()
         if not asset:
+            location.location_name_id = None
             continue
 
-        if asset.location_id in location_names:
+        if asset.location_id in location_ids:
             location.location_name_id = asset.location_id
             location.save()
 
@@ -119,24 +118,26 @@ def _create_can_locations():
     for can in corp_cans:
         if can.item_id not in location_names:
             structure = EveLocation.objects.filter(location_id=can.location_id).first()
+            system_id = structure.system_id if structure else None
             new_location = EveLocation(
                 location_id=can.item_id,
                 location_name=f"Can: {can.name}",
-                system_id=structure.system_id if structure else None,
+                system_id=system_id,
             )
             new_location.save()
 
 
 @shared_task
 def _update_can_locations():
-    locations = EveLocation.objects.filter(location_name__startswith="Can:").all()
+    can_locations = EveLocation.objects.filter(location_name__startswith="Can:").all()
     location_ids = list(EveLocation.objects.all().values_list("location_id", flat=True))
 
-    for location in locations:
+    for location in can_locations:
         asset = CorporationAsset.objects.filter(item_id=location.location_id).first()
         if not asset:
             asset = CharacterAsset.objects.filter(item_id=location.location_id).first()
             if not asset:
+                location.location_name_id = None
                 continue
 
         if asset.location_id in location_ids:
