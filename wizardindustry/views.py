@@ -13,14 +13,14 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
 
 # Alliance Auth
-from allianceauth.authentication.models import CharacterOwnership
+from allianceauth.authentication.models import CharacterOwnership, User
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from esi.decorators import token_required
 
 # Alliance Auth (External Libs)
 from eveuniverse.models import EveMarketGroup
 
-from .models import Owner
+from .models import Owner, CorporationAdmin
 from .utils import messages_plus
 from .view_models import (
     owned_blueprints,
@@ -84,7 +84,86 @@ def setup_corporation(request, token):
 
             owner.save()
 
+        corporation_admin = CorporationAdmin.objects.get_or_create(
+            corporation=corporation
+        )
+
+        corporation_admin[0].admin_users.add(request.user)
+        corporation_admin[0].save()
+
     return redirect("wizardindustry:index")
+
+
+@login_required
+@permission_required("wizardindustry.manage_corporations")
+def corporation_admin(request):
+    database_corporations = request.user.wizardIndustryCorporationAdmins.all()
+
+    if not database_corporations:
+        return redirect("wizardindustry:index")
+    
+    corporations = []
+
+    for corp in database_corporations:
+        corporations.append({"name": corp.corporation.corporation_name, "id": corp.corporation.corporation_id})
+    model = {"corporation_list": corporations}
+
+    if len(corporations) == 1:
+        model["corporation"] = database_corporations[0]
+
+    if request.method == "POST":
+        corporation_id = request.POST.get("corporation_id")
+        if corporation_id:
+            try:
+                selected_corp_id = int(corporation_id)
+                for corp in database_corporations:
+                    if corp.corporation.corporation_id == selected_corp_id:
+                        model["corporation"] = corp
+                        break
+            except (ValueError, TypeError):
+                pass
+
+            if request.POST.get("action") == "save_users":
+                post_data_admin_users = request.POST.getlist("to")
+                post_data_users = request.POST.getlist("to_2")
+
+                for manager_user in model["corporation"].admin_users.all():
+                    if str(manager_user.username) not in post_data_admin_users:
+                        model["corporation"].admin_users.remove(manager_user)
+
+                for user in model["corporation"].users.all():
+                    if str(user.username) not in post_data_users:
+                        model["corporation"].users.remove(user)
+
+                for admin_username in post_data_admin_users:
+                    try:
+                        manager_user = User.objects.get(username=admin_username)
+                        if manager_user not in model["corporation"].admin_users.all():
+                            model["corporation"].admin_users.add(manager_user)
+                    except User.DoesNotExist:
+                        continue
+
+                for username in post_data_users:
+                    try:
+                        user = User.objects.get(username=username)
+                        if user not in model["corporation"].users.all():
+                            model["corporation"].users.add(user)
+                    except User.DoesNotExist:
+                        continue
+
+                model["corporation"].save()
+
+    if model.get("corporation") is not None:
+        corporation = model.get("corporation")
+        excluded_user_ids = set()
+        excluded_user_ids.update(corporation.admin_users.values_list('id', flat=True))
+        excluded_user_ids.update(corporation.users.values_list('id', flat=True))
+        users = User.objects.exclude(id__in=excluded_user_ids).filter(character_ownerships__isnull=False).filter(is_active=True).all()
+        model["available_users"] = users
+        model["manager_users"] = corporation.admin_users.all()
+        model["users"] = corporation.users.all()
+
+    return render(request, "wizardindustry/corporation_admin.html", model)
 
 
 @login_required
@@ -150,8 +229,8 @@ def index(request: WSGIRequest) -> HttpResponse:
 
     owners = Owner.objects.all()
 
-    for owner in owners:
-        owner._get_assets()
+    # for owner in owners:
+    #     owner._get_assets()
 
     return render(request, "wizardindustry/index.html", models)
 

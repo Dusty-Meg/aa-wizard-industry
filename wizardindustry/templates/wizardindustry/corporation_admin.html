@@ -1,0 +1,233 @@
+{% extends 'wizardindustry/base.html' %}
+{% load i18n %}
+{% load humanize %}
+
+{% block details %}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">{% trans "Corporation Manageristration" %}</h3>
+    </div>
+    <div class="panel-body">
+        {% if corporation_list|length > 1 %}
+        <div class="form-group">
+            <label for="corporation-select">{% trans "Select Corporation:" %}</label>
+            <select id="corporation-select" class="form-control" name="corporation_id">
+                <option value="">{% trans "Select a corporation..." %}</option>
+                {% for corp in corporation_list %}
+                    <option value="{{ corp.id }}" 
+                        {% if corporation and corporation.corporation.corporation_id == corp.id %}selected{% endif %}>
+                        {{ corp.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        {% if corporation %}
+        <form method="POST" id="form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_users">
+            <input type="hidden" name="corporation_id" value="{{ corporation.corporation.corporation_id }}">
+            <div id="corporation-details">
+                <h4>{{ corporation.corporation.corporation_name }}</h4>
+                <div class="container">
+                    <br />
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label for="multi_d"><b>Users</b></label>
+                            <select name="from" id="multi_d" class="form-control" size="26" multiple="multiple">
+                                {% if available_users %}
+                                    {% for character in available_users %}
+                                    <option value='{{ character.username }}'>{{ character.profile.main_character.character_name }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2 d-grid gap-2">
+                            <button type="button" id="multi_d_rightAll" class="btn btn-primary"><i class="bi bi-fast-forward"></i></button>
+                            <button type="button" id="multi_d_rightSelected" class="btn btn-primary"><i class="bi bi-chevron-right"></i></button>
+                            <button type="button" id="multi_d_leftSelected" class="btn btn-primary"><i class="bi bi-chevron-left"></i></button>
+                            <button type="button" id="multi_d_leftAll" class="btn btn-primary"><i class="bi bi-rewind"></i></button>
+
+                            <hr style="margin: 40px 0 60px;" />
+
+                            <button type="button" id="multi_d_rightAll_2" class="btn btn-primary"><i class="bi bi-fast-forward"></i></button>
+                            <button type="button" id="multi_d_rightSelected_2" class="btn btn-primary"><i class="bi bi-chevron-right"></i></button>
+                            <button type="button" id="multi_d_leftSelected_2" class="btn btn-primary"><i class="bi bi-chevron-left"></i></button>
+                            <button type="button" id="multi_d_leftAll_2" class="btn btn-primary"><i class="bi bi-rewind"></i></button>
+                        </div>
+
+                        <div class="col-md-5">
+                            <b>Manager Users</b>
+                            <select name="to" id="multi_d_to" class="form-control" size="8" multiple="multiple">
+                                {% if manager_users %}
+                                    {% for character in manager_users %}
+                                    <option value='{{ character.username }}'>{{ character.profile.main_character.character_name }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+
+                            <br/><hr/><br/>
+
+                            <b>Allowed Users</b>
+                            <select name="to_2" id="multi_d_to_2" class="form-control" size="8" multiple="multiple">
+                                {% if users %}
+                                    {% for character in users %}
+                                    <option value='{{ character.username }}'>{{ character.profile.main_character.character_name }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-10">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock%}
+
+{% block extra_javascript %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const corporationSelect = document.getElementById('corporation-select');
+    if (corporationSelect) {
+        corporationSelect.addEventListener('change', function() {
+            if (this.value) {
+                // Create form data
+                const formData = new FormData();
+                formData.append('corporation_id', this.value);
+                formData.append('action', 'select_corporation');
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                
+                // Submit POST request
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Replace the page content with the new response
+                    document.open();
+                    document.write(html);
+                    document.close();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+    }
+});
+</script>
+
+<script src="https://rawgit.com/crlcu/multiselect/master/dist/js/multiselect.min.js"></script>
+
+<script type="text/javascript">
+    jQuery(document).ready(function($) {
+        $('#multi_d').multiselect({
+            right: '#multi_d_to, #multi_d_to_2',
+            rightSelected: '#multi_d_rightSelected, #multi_d_rightSelected_2',
+            leftSelected: '#multi_d_leftSelected, #multi_d_leftSelected_2',
+            rightAll: '#multi_d_rightAll, #multi_d_rightAll_2',
+            leftAll: '#multi_d_leftAll, #multi_d_leftAll_2',
+
+            search: {
+                left: '<input type="text" name="q" class="form-control" placeholder="Search..." />'
+            },
+
+            moveToRight: function(Multiselect, $options, event, silent, skipStack) {
+                var button = $(event.currentTarget).attr('id');
+
+                if (button == 'multi_d_rightSelected') {
+                    var $left_options = Multiselect.$left.find('> option:selected');
+                    Multiselect.$right.eq(0).append($left_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$right.eq(0).find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$right.eq(0));
+                    }
+                } else if (button == 'multi_d_rightAll') {
+                    var $left_options = Multiselect.$left.children(':visible');
+                    Multiselect.$right.eq(0).append($left_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$right.eq(0).find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$right.eq(0));
+                    }
+                } else if (button == 'multi_d_rightSelected_2') {
+                    var $left_options = Multiselect.$left.find('> option:selected');
+                    Multiselect.$right.eq(1).append($left_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$right.eq(1).find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$right.eq(1));
+                    }
+                } else if (button == 'multi_d_rightAll_2') {
+                    var $left_options = Multiselect.$left.children(':visible');
+                    Multiselect.$right.eq(1).append($left_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$right.eq(1).eq(1).find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$right.eq(1));
+                    }
+                }
+            },
+
+            moveToLeft: function(Multiselect, $options, event, silent, skipStack) {
+                var button = $(event.currentTarget).attr('id');
+
+                if (button == 'multi_d_leftSelected') {
+                    var $right_options = Multiselect.$right.eq(0).find('> option:selected');
+                    Multiselect.$left.append($right_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$left.find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$left);
+                    }
+                } else if (button == 'multi_d_leftAll') {
+                    var $right_options = Multiselect.$right.eq(0).children(':visible');
+                    Multiselect.$left.append($right_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$left.find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$left);
+                    }
+                } else if (button == 'multi_d_leftSelected_2') {
+                    var $right_options = Multiselect.$right.eq(1).find('> option:selected');
+                    Multiselect.$left.append($right_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$left.find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$left);
+                    }
+                } else if (button == 'multi_d_leftAll_2') {
+                    var $right_options = Multiselect.$right.eq(1).children(':visible');
+                    Multiselect.$left.append($right_options);
+
+                    if ( typeof Multiselect.callbacks.sort == 'function' && !silent ) {
+                        Multiselect.$left.find('> option').sort(Multiselect.callbacks.sort).appendTo(Multiselect.$left);
+                    }
+                }
+            }
+        });
+    });
+
+    $('#form').on('submit', function() {
+        $('#multi_d').prop('disabled', true);
+    });
+</script>
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+{% endblock %}
+
+
+{% block extra_script %}
+{% endblock %}

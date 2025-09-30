@@ -13,4 +13,5 @@ urlpatterns = [
     path("setup_character", views.setup_character, name="setup_character"),
     path("setup_corporation", views.setup_corporation, name="setup_corporation"),
     path("blueprint_pokemon", views.blueprint_pokemon, name="blueprint_pokemon"),
+    path("corporation_admin", views.corporation_admin, name="corporation_admin"),
 ]

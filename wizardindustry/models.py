@@ -833,3 +833,17 @@ class Owner(models.Model):
                 if asset.item_id in id_list:
                     asset.name = id_list.get(asset.item_id)
                     asset.save()
+
+
+class CorporationAdmin(models.Model):
+    corporation = models.ForeignKey(
+        EveCorporationInfo, on_delete=models.deletion.CASCADE, related_name="+"
+    )
+
+    admin_users = models.ManyToManyField(
+        User, related_name="wizardIndustryCorporationAdmins", blank=True, default=None
+    )
+
+    users = models.ManyToManyField(
+        User, related_name="wizardIndustryCorporationUsers", blank=True, default=None
+    )

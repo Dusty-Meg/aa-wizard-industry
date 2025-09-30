@@ -12,3 +12,10 @@
             <span class="btn btn-info">{% trans "Add Corporation" %}</span>
         </a>
     </li>
+    {% if user.wizardIndustryCorporationAdmins.all|length > 0 %}
+    <li class="nav-item">
+        <a href="{% url 'wizardindustry:corporation_admin' %}" class="nav-link py-0">
+            <span class="btn btn-info">{% trans "Manage Corporations" %}</span>
+        </a>
+    </li>
+    {% endif %}
