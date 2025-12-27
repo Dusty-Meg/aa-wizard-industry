@@ -1,6 +1,3 @@
-# Standard Library
-import os
-
 # Alliance Auth
 from esi.openapi_clients import ESIClientProvider
 
