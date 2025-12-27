@@ -6,7 +6,7 @@ from django.urls import path
 # AA wizardindustry App
 from wizardindustry import views
 
-app_name: str = "wizardindustry"
+app_name: str = "wizardindustry" # pylint: disable=invalid-name
 
 urlpatterns = [
     path("", views.index, name="index"),

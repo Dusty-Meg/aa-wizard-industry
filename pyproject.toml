@@ -16,7 +16,7 @@ license = { file = "LICENSE" }
 authors = [
     { name = "Dusty Meg", email = "aa_plugins@mmoore.uk" },
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 classifiers = [
     "Environment :: Web Environment",
     "Framework :: Django",
@@ -42,7 +42,7 @@ dependencies = [
     "django-eveuniverse>=1.5.4",
 ]
 urls.Changelog = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/blob/master/CHANGELOG.md"
-urls."Issue / Bug Reports" = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/issues"
+urls.Tracker = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/issues"
 
 [tool.hatch.version]
 path = "wizardindustry/__init__.py"
