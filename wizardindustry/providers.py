@@ -2,11 +2,11 @@
 import os
 
 # Alliance Auth
-from esi.openapi_clients import EsiClientProvider
+from esi.openapi_clients import ESIClientProvider
 
 from . import __version__
 
-esi = EsiClientProvider(
+esi = ESIClientProvider(
     compatibility_date="2025-12-16",
     ua_appname="aa-wizard-industry",
     ua_version=__version__,
