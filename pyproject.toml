@@ -40,6 +40,7 @@ dependencies = [
     "aa-blueprints>=1.7",
     "allianceauth>=4.3.1,<5",
     "django-eveuniverse>=1.5.4",
+    "django-esi>=8.2.2",
 ]
 urls.Changelog = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/blob/master/CHANGELOG.md"
 urls.Tracker = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/issues"
