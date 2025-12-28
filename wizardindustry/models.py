@@ -190,9 +190,7 @@ def fetch_location_name(
                 )
             )
             return None
-        system = EveSolarSystem.objects.get_or_create_esi(
-            id=structure.solar_system_id
-        )
+        system = EveSolarSystem.objects.get_or_create_esi(id=structure.solar_system_id)
         if not system:
             logger.error("Unknown System, Have you populated the map?")
             return None
@@ -777,13 +775,11 @@ class Owner(models.Model):
         ).order_by("pk")
 
         for subset in chunks(assets, 100):
-            assets_names = (
-                esi.client.Assets.PostCorporationsCorporationIdAssetsNames(
-                    corporation_id=self.corporation.corporation_id,
-                    token=token,
-                    body=[item.item_id for item in subset],
-                ).result()
-            )
+            assets_names = esi.client.Assets.PostCorporationsCorporationIdAssetsNames(
+                corporation_id=self.corporation.corporation_id,
+                token=token,
+                body=[item.item_id for item in subset],
+            ).result()
 
             id_list = {i.item_id: i.name for i in assets_names}
 
