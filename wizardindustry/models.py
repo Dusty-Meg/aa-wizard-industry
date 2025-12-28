@@ -68,14 +68,14 @@ def get_corp_token(corp_id: int, scopes: list, req_roles: list | None | bool):
     for token in tokens:
         try:
             if req_roles:  # There are endpoints with no requirements
-                roles = esi.client.Character.get_characters_character_id_roles(
-                    character_id=token.character_id, token=token.valid_access_token()
-                ).result()
+                roles = esi.client.Character.GetCharactersCharacterIdRoles(
+                    character_id=token.character_id, token=token
+                ).results(use_etag=False)
 
                 has_roles = False
 
                 # do we have the roles.
-                for role in roles.get("roles", []):
+                for role in roles:
                     if role in req_roles:
                         has_roles = True
                         break
@@ -143,17 +143,17 @@ def fetch_location_name(
             location_id=location_id, location_name=system.name, system=system
         )
     elif 60000000 < location_id < 64000000:  # Station ID
-        station = esi.client.Universe.get_universe_stations_station_id(
+        station = esi.client.Universe.GetUniverseStationsStationId(
             station_id=location_id
         ).result()
-        system = EveSolarSystem.objects.get_or_create_esi(id=station.get("system_id"))
+        system = EveSolarSystem.objects.get_or_create_esi(id=station.system_id)
         if not system:
             logger.error("Unknown System, Have you populated the map?")
             return None
         return EveLocation(
             location_id=location_id,
-            location_name=station.get("name"),
-            system_id=station.get("system_id"),
+            location_name=station.name,
+            system_id=station.system_id,
         )
     elif location_flag == "OfficeFolder":
         structure = EveLocation.objects.filter(location_id=location_id).first()
@@ -177,8 +177,8 @@ def fetch_location_name(
 
     else:
         try:
-            structure = esi.client.Universe.get_universe_structures_structure_id(
-                structure_id=location_id, token=token.valid_access_token()
+            structure = esi.client.Universe.GetUniverseStructuresStructureId(
+                structure_id=location_id, token=token
             ).result()
         except HTTPForbidden as e:  # no access
             logger.debug(
@@ -190,20 +190,18 @@ def fetch_location_name(
                 )
             )
             return None
-        system = EveSolarSystem.objects.get_or_create_esi(
-            id=structure.get("solar_system_id")
-        )
+        system = EveSolarSystem.objects.get_or_create_esi(id=structure.solar_system_id)
         if not system:
             logger.error("Unknown System, Have you populated the map?")
             return None
         if current_loc:
-            existing.location_name = structure.get("name")
+            existing.location_name = structure.name
             return existing
         else:
             return EveLocation(
                 location_id=location_id,
-                location_name=structure.get("name"),
-                system_id=structure.get("solar_system_id"),
+                location_name=structure.name,
+                system_id=structure.solar_system_id,
             )
 
 
@@ -435,9 +433,9 @@ class Owner(models.Model):
         if not token:
             return False
 
-        jobs = esi.client.Industry.get_characters_character_id_industry_jobs(
+        jobs = esi.client.Industry.GetCharactersCharacterIdIndustryJobs(
             character_id=self.character.character.character_id,
-            token=token.valid_access_token(),
+            token=token,
         ).results()
 
         location_names = list(
@@ -445,74 +443,71 @@ class Owner(models.Model):
         )
 
         existing_jobs = CharacterIndustryJob.objects.filter(
-            character=self.character, job_id__in=[item.get("job_id") for item in jobs]
+            character=self.character, job_id__in=[item.job_id for item in jobs]
         ).values_list("job_id", flat=True)
 
         item_ids = []
         items = []
         for item in jobs:
-            item_ids.append(item.get("job_id"))
+            item_ids.append(item.job_id)
 
-            if item.get("job_id") in existing_jobs:
+            if item.job_id in existing_jobs:
                 job_item = CharacterIndustryJob.objects.get(
-                    character=self.character, job_id=item.get("job_id")
+                    character=self.character, job_id=item.job_id
                 )
-                job_item.completed_character_id = item.get("completed_character_id")
-                job_item.completed_date = item.get("completed_date")
-                job_item.end_date = item.get("end_date")
-                job_item.pause_date = item.get("pause_date")
-                job_item.status = item.get("status")
-                job_item.successful_runs = item.get("successful_runs")
+                job_item.completed_character_id = item.completed_character_id
+                job_item.completed_date = item.completed_date
+                job_item.end_date = item.end_date
+                job_item.pause_date = item.pause_date
+                job_item.status = item.status
+                job_item.successful_runs = item.successful_runs
 
-                if item.get("blueprint_location_id") in location_names:
-                    job_item.blueprint_location_name_id = item.get(
-                        "blueprint_location_id"
-                    )
-                if item.get("facility_id") in location_names:
-                    job_item.facility_name_id = item.get("facility_id")
-                if item.get("output_location_id") in location_names:
-                    job_item.output_location_name_id = item.get("output_location_id")
-
+                if item.blueprint_location_id in location_names:
+                    job_item.blueprint_location_name_id = item.blueprint_location_id
+                if item.facility_id in location_names:
+                    job_item.facility_name_id = item.facility_id
+                if item.output_location_id in location_names:
+                    job_item.output_location_name_id = item.output_location_id
                 job_item.save()
                 continue
 
             job_item = CharacterIndustryJob(
                 character=self.character,
-                activity_id=item.get("activity_id"),
-                blueprint_id=item.get("blueprint_id"),
-                blueprint_location_id=item.get("blueprint_location_id"),
-                blueprint_type_id=item.get("blueprint_type_id"),
+                activity_id=item.activity_id,
+                blueprint_id=item.blueprint_id,
+                blueprint_location_id=item.blueprint_location_id,
+                blueprint_type_id=item.blueprint_type_id,
                 blueprint_type_name=EveType.objects.get_or_create_esi(
-                    id=item.get("blueprint_type_id")
+                    id=item.blueprint_type_id
                 )[0],
-                completed_character_id=item.get("completed_character_id"),
-                completed_date=item.get("completed_date"),
-                cost=item.get("cost"),
-                duration=item.get("duration"),
-                end_date=item.get("end_date"),
-                facility_id=item.get("facility_id"),
-                installer_id=item.get("installer_id"),
-                job_id=item.get("job_id"),
-                licensed_runs=item.get("licensed_runs"),
-                output_location_id=item.get("output_location_id"),
-                pause_date=item.get("pause_date"),
-                probability=item.get("probability"),
-                product_type_id=item.get("product_type_id"),
+                completed_character_id=item.completed_character_id,
+                completed_date=item.completed_date,
+                cost=item.cost,
+                duration=item.duration,
+                end_date=item.end_date,
+                facility_id=item.facility_id,
+                installer_id=item.installer_id,
+                job_id=item.job_id,
+                licensed_runs=item.licensed_runs,
+                output_location_id=item.output_location_id,
+                pause_date=item.pause_date,
+                probability=item.probability,
+                product_type_id=item.product_type_id,
                 product_type_name=EveType.objects.get_or_create_esi(
-                    id=item.get("product_type_id")
+                    id=item.product_type_id
                 )[0],
-                runs=item.get("runs"),
-                start_date=item.get("start_date"),
-                station_id=item.get("station_id"),
-                status=item.get("status"),
-                successful_runs=item.get("successful_runs"),
+                runs=item.runs,
+                start_date=item.start_date,
+                station_id=item.station_id,
+                status=item.status,
+                successful_runs=item.successful_runs,
             )
-            if item.get("blueprint_location_id") in location_names:
-                job_item.blueprint_location_name_id = item.get("blueprint_location_id")
-            if item.get("facility_id") in location_names:
-                job_item.facility_name_id = item.get("facility_id")
-            if item.get("output_location_id") in location_names:
-                job_item.output_location_name_id = item.get("output_location_id")
+            if item.blueprint_location_id in location_names:
+                job_item.blueprint_location_name_id = item.blueprint_location_id
+            if item.facility_id in location_names:
+                job_item.facility_name_id = item.facility_id
+            if item.output_location_id in location_names:
+                job_item.output_location_name_id = item.output_location_id
             items.append(job_item)
 
         CharacterIndustryJob.objects.bulk_create(items)
@@ -536,9 +531,9 @@ class Owner(models.Model):
         if not token:
             return False
 
-        jobs = esi.client.Industry.get_corporations_corporation_id_industry_jobs(
+        jobs = esi.client.Industry.GetCorporationsCorporationIdIndustryJobs(
             corporation_id=self.corporation.corporation_id,
-            token=token.valid_access_token(),
+            token=token,
         ).results()
 
         location_names = list(
@@ -547,74 +542,71 @@ class Owner(models.Model):
 
         existing_jobs = CorporationIndustryJob.objects.filter(
             corporation=self.corporation,
-            job_id__in=[item.get("job_id") for item in jobs],
+            job_id__in=[item.job_id for item in jobs],
         ).values_list("job_id", flat=True)
 
         item_ids = []
         items = []
         for item in jobs:
-            item_ids.append(item.get("job_id"))
+            item_ids.append(item.job_id)
 
-            if item.get("job_id") in existing_jobs:
+            if item.job_id in existing_jobs:
                 job_item = CorporationIndustryJob.objects.get(
-                    corporation=self.corporation, job_id=item.get("job_id")
+                    corporation=self.corporation, job_id=item.job_id
                 )
-                job_item.completed_character_id = item.get("completed_character_id")
-                job_item.completed_date = item.get("completed_date")
-                job_item.end_date = item.get("end_date")
-                job_item.pause_date = item.get("pause_date")
-                job_item.status = item.get("status")
-                job_item.successful_runs = item.get("successful_runs")
-
-                if item.get("blueprint_location_id") in location_names:
-                    job_item.blueprint_location_name_id = item.get(
-                        "blueprint_location_id"
-                    )
-                if item.get("facility_id") in location_names:
-                    job_item.facility_name_id = item.get("facility_id")
-                if item.get("output_location_id") in location_names:
-                    job_item.output_location_name_id = item.get("output_location_id")
+                job_item.completed_character_id = item.completed_character_id
+                job_item.completed_date = item.completed_date
+                job_item.end_date = item.end_date
+                job_item.pause_date = item.pause_date
+                job_item.status = item.status
+                job_item.successful_runs = item.successful_runs
+                if item.blueprint_location_id in location_names:
+                    job_item.blueprint_location_name_id = item.blueprint_location_id
+                if item.facility_id in location_names:
+                    job_item.facility_name_id = item.facility_id
+                if item.output_location_id in location_names:
+                    job_item.output_location_name_id = item.output_location_id
 
                 job_item.save()
                 continue
 
             job_item = CorporationIndustryJob(
                 corporation=self.corporation,
-                activity_id=item.get("activity_id"),
-                blueprint_id=item.get("blueprint_id"),
-                blueprint_location_id=item.get("blueprint_location_id"),
-                blueprint_type_id=item.get("blueprint_type_id"),
+                activity_id=item.activity_id,
+                blueprint_id=item.blueprint_id,
+                blueprint_location_id=item.blueprint_location_id,
+                blueprint_type_id=item.blueprint_type_id,
                 blueprint_type_name=EveType.objects.get_or_create_esi(
-                    id=item.get("blueprint_type_id")
+                    id=item.blueprint_type_id
                 )[0],
-                completed_character_id=item.get("completed_character_id"),
-                completed_date=item.get("completed_date"),
-                cost=item.get("cost"),
-                duration=item.get("duration"),
-                end_date=item.get("end_date"),
-                facility_id=item.get("facility_id"),
-                installer_id=item.get("installer_id"),
-                job_id=item.get("job_id"),
-                licensed_runs=item.get("licensed_runs"),
-                location_id=item.get("location_id"),
-                output_location_id=item.get("output_location_id"),
-                pause_date=item.get("pause_date"),
-                probability=item.get("probability"),
-                product_type_id=item.get("product_type_id"),
+                completed_character_id=item.completed_character_id,
+                completed_date=item.completed_date,
+                cost=item.cost,
+                duration=item.duration,
+                end_date=item.end_date,
+                facility_id=item.facility_id,
+                installer_id=item.installer_id,
+                job_id=item.job_id,
+                licensed_runs=item.licensed_runs,
+                location_id=item.location_id,
+                output_location_id=item.output_location_id,
+                pause_date=item.pause_date,
+                probability=item.probability,
+                product_type_id=item.product_type_id,
                 product_type_name=EveType.objects.get_or_create_esi(
-                    id=item.get("product_type_id")
+                    id=item.product_type_id
                 )[0],
-                runs=item.get("runs"),
-                start_date=item.get("start_date"),
-                status=item.get("status"),
-                successful_runs=item.get("successful_runs"),
+                runs=item.runs,
+                start_date=item.start_date,
+                status=item.status,
+                successful_runs=item.successful_runs,
             )
-            if item.get("blueprint_location_id") in location_names:
-                job_item.blueprint_location_name_id = item.get("blueprint_location_id")
-            if item.get("facility_id") in location_names:
-                job_item.facility_name_id = item.get("facility_id")
-            if item.get("output_location_id") in location_names:
-                job_item.output_location_name_id = item.get("output_location_id")
+            if item.blueprint_location_id in location_names:
+                job_item.blueprint_location_name_id = item.blueprint_location_id
+            if item.facility_id in location_names:
+                job_item.facility_name_id = item.facility_id
+            if item.output_location_id in location_names:
+                job_item.output_location_name_id = item.output_location_id
 
             items.append(job_item)
 
@@ -643,10 +635,10 @@ class Owner(models.Model):
         if not token:
             return False
 
-        assets = esi.client.Assets.get_characters_character_id_assets(
+        assets = esi.client.Assets.GetCharactersCharacterIdAssets(
             character_id=self.character.character.character_id,
-            token=token.valid_access_token(),
-        ).results()
+            token=token,
+        ).results(use_etag=False)
 
         location_names = list(
             EveLocation.objects.all().values_list("location_id", flat=True)
@@ -656,24 +648,22 @@ class Owner(models.Model):
         items = []
 
         for item in assets:
-            item_ids.append(item.get("item_id"))
+            item_ids.append(item.item_id)
             asset_item = CharacterAsset(
                 character=self.character,
-                blueprint_copy=item.get(" "),
-                singleton=item.get("is_singleton"),
-                item_id=item.get("item_id"),
-                location_flag=item.get("location_flag"),
-                location_id=item.get("location_id"),
-                location_type=item.get("location_type"),
-                quantity=item.get("quantity"),
-                type_id=item.get("type_id"),
-                type_name=EveType.objects.get_or_create_esi(id=item.get("type_id"))[0],
-                location_name=item.get("location_name"),
-                name=item.get("name"),
+                blueprint_copy=item.is_blueprint_copy,
+                singleton=item.is_singleton,
+                item_id=item.item_id,
+                location_flag=item.location_flag,
+                location_id=item.location_id,
+                location_type=item.location_type,
+                quantity=item.quantity,
+                type_id=item.type_id,
+                type_name=EveType.objects.get_or_create_esi(id=item.type_id)[0],
             )
 
-            if item.get("location_id") in location_names:
-                asset_item.location_name_id = item.get("location_id")
+            if item.location_id in location_names:
+                asset_item.location_name_id = item.location_id
             items.append(asset_item)
 
         delete_query = CharacterAsset.objects.filter(character=self.character)
@@ -699,10 +689,10 @@ class Owner(models.Model):
         if not token:
             return False
 
-        assets = esi.client.Assets.get_corporations_corporation_id_assets(
+        assets = esi.client.Assets.GetCorporationsCorporationIdAssets(
             corporation_id=self.corporation.corporation_id,
-            token=token.valid_access_token(),
-        ).results()
+            token=token,
+        ).results(use_etag=False)
 
         location_names = list(
             EveLocation.objects.all().values_list("location_id", flat=True)
@@ -713,42 +703,42 @@ class Owner(models.Model):
         failed_locations = []
 
         for item in assets:
-            item_ids.append(item.get("item_id"))
+            item_ids.append(item.item_id)
             asset_item = CorporationAsset(
                 corporation=self.corporation,
-                blueprint_copy=item.get("is_blueprint_copy"),
-                singleton=item.get("is_singleton"),
-                item_id=item.get("item_id"),
-                location_flag=item.get("location_flag"),
-                location_id=item.get("location_id"),
-                location_type=item.get("location_type"),
-                quantity=item.get("quantity"),
-                type_id=item.get("type_id"),
-                type_name=EveType.objects.get_or_create_esi(id=item.get("type_id"))[0],
-                location_name=item.get("location_name"),
-                name=item.get("name"),
+                blueprint_copy=item.is_blueprint_copy,
+                singleton=item.is_singleton,
+                item_id=item.item_id,
+                location_flag=item.location_flag,
+                location_id=item.location_id,
+                location_type=item.location_type,
+                quantity=item.quantity,
+                type_id=item.type_id,
+                type_name=EveType.objects.get_or_create_esi(id=item.type_id)[0],
+                # location_name=item.location_name,
+                # name=item.name,
             )
 
-            if item.get("location_id") in location_names:
-                asset_item.location_name_id = item.get("location_id")
+            if item.location_id in location_names:
+                asset_item.location_name_id = item.location_id
             else:
                 try:
                     if (
-                        item.get("location_id") not in failed_locations
-                        or item.get("location_flag") == "OfficeFolder"
+                        item.location_id not in failed_locations
+                        or item.location_flag == "OfficeFolder"
                     ):
                         new_name = fetch_location_name(
-                            item.get("location_id"),
-                            item.get("location_flag"),
+                            item.location_id,
+                            item.location_flag,
                             token.character_id,
-                            item.get("item_id"),
+                            item.item_id,
                         )
                         if new_name:
                             new_name.save()
-                            location_names.append(new_name.get("location_id"))
-                            asset_item.location_name_id = new_name.get("location_id")
+                            location_names.append(new_name.location_id)
+                            asset_item.location_name_id = new_name.location_id
                         else:
-                            failed_locations.append(item.get("location_id"))
+                            failed_locations.append(item.location_id)
                 except Exception:
                     pass
             items.append(asset_item)
@@ -785,15 +775,13 @@ class Owner(models.Model):
         ).order_by("pk")
 
         for subset in chunks(assets, 100):
-            assets_names = (
-                esi.client.Assets.post_corporations_corporation_id_assets_names(
-                    corporation_id=self.corporation.corporation_id,
-                    token=token.valid_access_token(),
-                    item_ids=[item.item_id for item in subset],
-                ).result()
-            )
+            assets_names = esi.client.Assets.PostCorporationsCorporationIdAssetsNames(
+                corporation_id=self.corporation.corporation_id,
+                token=token,
+                body=[item.item_id for item in subset],
+            ).result()
 
-            id_list = {i.get("item_id"): i.get("name") for i in assets_names}
+            id_list = {i.item_id: i.name for i in assets_names}
 
             for asset in subset:
                 if asset.item_id in id_list:
@@ -821,13 +809,13 @@ class Owner(models.Model):
         ).order_by("pk")
 
         for subset in chunks(assets, 100):
-            assets_names = esi.client.Assets.post_characters_character_id_assets_names(
+            assets_names = esi.client.Assets.PostCharactersCharacterIdAssetsNames(
                 character_id=self.character.character.character_id,
-                token=token.valid_access_token(),
-                item_ids=[item.item_id for item in subset],
+                token=token,
+                body=[item.item_id for item in subset],
             ).result()
 
-            id_list = {i.get("item_id"): i.get("name") for i in assets_names}
+            id_list = {i.item_id: i.name for i in assets_names}
 
             for asset in subset:
                 if asset.item_id in id_list:
