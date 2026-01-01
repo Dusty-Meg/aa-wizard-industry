@@ -10,6 +10,7 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 from esi.errors import TokenError
+from esi.exceptions import HTTPNotModified
 from esi.models import Token
 
 # Alliance Auth (External Libs)
@@ -75,7 +76,7 @@ def get_corp_token(corp_id: int, scopes: list, req_roles: list | None | bool):
                 has_roles = False
 
                 # do we have the roles.
-                for role in roles:
+                for role in roles[0].roles:
                     if role in req_roles:
                         has_roles = True
                         break
@@ -378,6 +379,9 @@ class Asset(models.Model):
     )
 
     name = models.CharField(max_length=255, null=True, default=None)
+    system = models.ForeignKey(
+        EveSolarSystem, on_delete=models.SET_NULL, null=True, default=None
+    )
 
     class Meta:
         abstract = True
@@ -635,10 +639,15 @@ class Owner(models.Model):
         if not token:
             return False
 
-        assets = esi.client.Assets.GetCharactersCharacterIdAssets(
-            character_id=self.character.character.character_id,
-            token=token,
-        ).results(use_etag=False)
+        try:
+            assets = esi.client.Assets.GetCharactersCharacterIdAssets(
+                character_id=self.character.character.character_id,
+                token=token,
+            ).results(use_etag=False)
+        except HTTPNotModified:
+            return
+
+        locations = EveLocation.objects.all()
 
         location_names = list(
             EveLocation.objects.all().values_list("location_id", flat=True)
@@ -664,6 +673,7 @@ class Owner(models.Model):
 
             if item.location_id in location_names:
                 asset_item.location_name_id = item.location_id
+                asset_item.system_id = locations.get(location_id=item.location_id).system_id
             items.append(asset_item)
 
         delete_query = CharacterAsset.objects.filter(character=self.character)
@@ -689,14 +699,18 @@ class Owner(models.Model):
         if not token:
             return False
 
-        assets = esi.client.Assets.GetCorporationsCorporationIdAssets(
-            corporation_id=self.corporation.corporation_id,
-            token=token,
-        ).results(use_etag=False)
+        try:
+            assets = esi.client.Assets.GetCorporationsCorporationIdAssets(
+                corporation_id=self.corporation.corporation_id,
+                token=token,
+            ).results(use_etag=False)
+        except HTTPNotModified:
+            return
 
         location_names = list(
             EveLocation.objects.all().values_list("location_id", flat=True)
         )
+        locations = EveLocation.objects.all()
 
         item_ids = []
         items = []
@@ -721,6 +735,7 @@ class Owner(models.Model):
 
             if item.location_id in location_names:
                 asset_item.location_name_id = item.location_id
+                asset_item.system_id = locations.get(location_id=item.location_id).system_id
             else:
                 try:
                     if (
@@ -736,10 +751,12 @@ class Owner(models.Model):
                         if new_name:
                             new_name.save()
                             location_names.append(new_name.location_id)
+                            locations = list(locations) + [new_name]
                             asset_item.location_name_id = new_name.location_id
                         else:
                             failed_locations.append(item.location_id)
                 except Exception:
+                    failed_locations.append(item.location_id)
                     pass
             items.append(asset_item)
 
