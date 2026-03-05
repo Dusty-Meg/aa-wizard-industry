@@ -10,6 +10,8 @@ Test settings
 
 from .base import *
 
+INSTALLED_APPS = ["modeltranslation"] + INSTALLED_APPS
+
 PACKAGE = "wizardindustry"
 
 # Static files (CSS, JavaScript, Images)
@@ -62,6 +64,7 @@ NOTIFICATIONS_MAX_PER_USER = 50
 
 # Add any additional apps to this list.
 INSTALLED_APPS += [
+    "eve_sde",
     PACKAGE,
 ]
 

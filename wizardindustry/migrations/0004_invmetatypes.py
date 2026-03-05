@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("eveuniverse", "0010_alter_eveindustryactivityduration_eve_type_and_more"),
         ("wizardindustry", "0003_remove_baseprice_price_baseprice_base_price"),
     ]
 

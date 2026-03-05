@@ -12,4 +12,4 @@ ______________________________________________________________________
 
 Basic industry tool for helping small bits in my corp.
 Piggy backs off other plugins for their ESI calls.
-Run `python manage.py eveuniverse_load_data types --types-enabled-sections dogmas  market_groups industry_activities` after installation to populate required tables.
+Run `python manage.py esde_load_sde` after installation to populate required tables.

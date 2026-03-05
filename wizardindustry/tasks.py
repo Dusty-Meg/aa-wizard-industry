@@ -7,7 +7,7 @@ import urllib.request, json
 # Third Party
 from celery import shared_task
 
-from eveuniverse.models import EveType
+from eve_sde.models import ItemType
 
 from .models import BasePrice, invMetaTypes
 
@@ -22,7 +22,7 @@ def get_base_prices():
             if "basePrice" not in item or item["basePrice"] == None:
                 continue
             try:
-                eve_type = EveType.objects.get(id=item["typeID"])
+                eve_type = ItemType.objects.get(id=item["typeID"])
                 base_price, created = BasePrice.objects.get_or_create(eve_type=eve_type)
                 base_price.base_price = item["basePrice"]
                 base_price.save()
@@ -36,7 +36,7 @@ def get_inv_meta_types():
         data = json.loads(url.read().decode())
         for item in data:
             try:
-                eve_type = EveType.objects.get(id=item["typeID"])
+                eve_type = ItemType.objects.get(id=item["typeID"])
                 inv_meta_types, created = invMetaTypes.objects.get_or_create(eve_type=eve_type)
                 inv_meta_types.parent_type_id = item["parentTypeID"]
                 inv_meta_types.meta_group_id = item["metaGroupID"]

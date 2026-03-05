@@ -37,7 +37,7 @@ dynamic = [
 ]
 dependencies = [
     "allianceauth<5,>=4",
-    "django-eveuniverse>=1.5.4",
+    "django-eveonline-sde>=0.0.1b5",
     "aa-blueprints>=1.7.0",
 ]
 urls.Changelog = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/blob/master/CHANGELOG.md"
