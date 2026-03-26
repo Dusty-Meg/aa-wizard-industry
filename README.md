@@ -11,5 +11,8 @@ This is an wizardindustry plugin app for [Alliance Auth](https://gitlab.com/alli
 ______________________________________________________________________
 
 Basic industry tool for helping small bits in my corp.
-Piggy backs off other plugins for their ESI calls.
+Stores blueprint ownership locally and syncs from ESI via scheduled tasks.
 Run `python manage.py esde_load_sde` after installation to populate required tables.
+Required ESI scopes for blueprint sync:
+- `esi-characters.read_blueprints.v1`
+- `esi-corporations.read_blueprints.v1`

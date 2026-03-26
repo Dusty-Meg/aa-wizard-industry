@@ -7,6 +7,7 @@ If you wish to make changes, overload the setting in your project's settings fil
 """
 
 # Standard Library
+import hashlib
 import os
 
 # Third Party
@@ -46,6 +47,13 @@ INSTALLED_APPS = [
 
 SECRET_KEY = "wow I'm a really bad default secret key"
 
+WIZARDINDUSTRY_SYNC_MINUTE = str(
+    int(hashlib.sha256(SECRET_KEY.encode("utf-8")).hexdigest()[:8], 16) % 60
+)
+WIZARDINDUSTRY_CORP_SYNC_MINUTE = str(
+    int(hashlib.sha256(f"{SECRET_KEY}:corp".encode("utf-8")).hexdigest()[:8], 16) % 60
+)
+
 # Celery configuration
 BROKER_URL = "redis://localhost:6379/0"
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
@@ -69,6 +77,14 @@ CELERYBEAT_SCHEDULE = {
     "analytics_daily_stats": {
         "task": "allianceauth.analytics.tasks.analytics_daily_stats",
         "schedule": crontab(minute="0", hour="2"),
+    },
+    "wizardindustry_sync_blueprints": {
+        "task": "wizardindustry.tasks.sync_all_character_blueprints",
+        "schedule": crontab(minute=WIZARDINDUSTRY_SYNC_MINUTE, hour="*/2"),
+    },
+    "wizardindustry_sync_corporation_blueprints": {
+        "task": "wizardindustry.tasks.sync_all_corporation_blueprints",
+        "schedule": crontab(minute=WIZARDINDUSTRY_CORP_SYNC_MINUTE, hour="*/2"),
     },
 }
 
@@ -209,7 +225,7 @@ LOGOUT_REDIRECT_URL = "authentication:dashboard"  # destination after logging ou
 # - absolute urls eg 'http://wizardindustry.com/dashboard'
 
 # scopes required on new tokens when logging in. Cannot be blank.
-LOGIN_TOKEN_SCOPES = ["publicData"]
+LOGIN_TOKEN_SCOPES = ["publicData", "esi-characters.read_blueprints.v1", "esi-corporations.read_blueprints.v1"]
 
 EMAIL_TIMEOUT = 15
 
