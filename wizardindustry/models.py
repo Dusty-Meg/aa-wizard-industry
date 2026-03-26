@@ -28,6 +28,9 @@ class CharacterBlueprint(models.Model):
     last_synced_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
+        permissions = [
+            ("basic_access", "Can access Wizard Industry"),
+        ]
         constraints = [
             models.UniqueConstraint(fields=["character_id", "item_id"], name="wizind_charbp_item_unique"),
         ]
