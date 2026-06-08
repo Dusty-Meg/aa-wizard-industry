@@ -1,16 +1,23 @@
 # django-esi
-from esi.clients import EsiClientProvider
+from esi.openapi_clients import ESIClientProvider as ESIOpenApiProvider
 
 from wizardindustry import __title__, __version__
 
-esi_blueprints = EsiClientProvider(
+esi_blueprints = ESIOpenApiProvider(
     ua_appname=__title__,
     ua_version=__version__,
+    compatibility_date="2026-05-19",
+    operations=[
+        "GetCharactersCharacterIdBlueprints",
+        "GetCharactersCharacterId",
+        "GetCorporationsCorporationId",
+        "GetCorporationsCorporationIdBlueprints"
+    ]
 )
 
 
 def get_character_blueprints(token):
-    operation = esi_blueprints.client.Character.get_characters_character_id_blueprints(
+    operation = esi_blueprints.client.Character.GetCharactersCharacterIdBlueprints(
         character_id=token.character_id,
         token=token.valid_access_token(),
     )
@@ -19,7 +26,7 @@ def get_character_blueprints(token):
 
 
 def get_character_details(character_id):
-    operation = esi_blueprints.client.Character.get_characters_character_id(
+    operation = esi_blueprints.client.Character.GetCharactersCharacterId(
         character_id=character_id,
     )
 
@@ -27,7 +34,7 @@ def get_character_details(character_id):
 
 
 def get_corporation_details(corporation_id):
-    operation = esi_blueprints.client.Corporation.get_corporations_corporation_id(
+    operation = esi_blueprints.client.Corporation.GetCorporationsCorporationId(
         corporation_id=corporation_id,
     )
 
@@ -35,7 +42,7 @@ def get_corporation_details(corporation_id):
 
 
 def get_corporation_blueprints(token, corporation_id):
-    operation = esi_blueprints.client.Corporation.get_corporations_corporation_id_blueprints(
+    operation = esi_blueprints.client.Corporation.GetCorporationsCorporationIdBlueprints(
         corporation_id=corporation_id,
         token=token.valid_access_token(),
     )
