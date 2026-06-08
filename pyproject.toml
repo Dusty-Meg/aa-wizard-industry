@@ -36,9 +36,9 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "allianceauth<5,>=4",
+    "allianceauth>=5",
     "django-eveonline-sde>=0.0.1b5",
-    "django-esi>=8,<9",
+    "django-esi>=8",
 ]
 urls.Changelog = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/blob/master/CHANGELOG.md"
 urls."Issue / Bug Reports" = "https://github.com/Dusty-Meg/aa-wizardindustry-plugin/issues"
