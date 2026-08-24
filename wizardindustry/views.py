@@ -117,7 +117,8 @@ def _market_cycler(blueprint_marketgroups, owned_blueprint_type_ids):
         92182,
         86180,
         86179,
-        86178
+        86178,
+        85232
     ]
 
     for market_group in blueprint_marketgroups:
